@@ -1,0 +1,4 @@
+# Controllers directory
+# Business logic and request handlers will be created here
+# Examples: authController.js, productController.js, invoiceController.js, customerController.js
+
