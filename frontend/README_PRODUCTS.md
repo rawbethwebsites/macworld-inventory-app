@@ -8,7 +8,7 @@ A fully functional Products management page built with React and Supabase.
 - ✅ **Loading Skeleton** - Shows animated skeleton while data is loading
 - ✅ **Add New Products** - Form to add products with validation
 - ✅ **Delete Products** - Remove products with confirmation dialog
-- ✅ **Statistics Dashboard** - Shows total products, stock, and inventory value
+- ✅ **Statistics Dashboard** - Shows total products, stock levels, and low-stock alerts
 - ✅ **Stock Status Badges** - Visual indicators (In Stock, Low Stock, Out of Stock)
 - ✅ **Error Handling** - Displays user-friendly error messages
 - ✅ **Success Notifications** - Auto-dismissing success messages
@@ -20,27 +20,27 @@ A fully functional Products management page built with React and Supabase.
 ### Statistics Cards
 - **Total Products**: Count of all products
 - **Total Stock**: Sum of all quantities
-- **Total Value**: Combined value of all inventory (price × quantity)
+- **Low Stock Items**: Count of products at or below their threshold
 
 ### Product Table
 Displays products with:
-- Product name
-- Price (formatted in Nigerian Naira ₦)
+- Product name and category hierarchy
 - Quantity in stock
-- Total value per product
+- Low stock threshold
 - Stock status badge
 - Delete action button
 
 ### Add Product Form
 Fields:
 - **Product Name** (required) - Text input
-- **Price** (required) - Number input with decimal support
+- **Category** and **Subcategory** (required) - Dropdown selections
 - **Quantity** (required) - Integer input
+- **Image** (optional) - Upload to Supabase Storage
 
 Validation:
 - Name must not be empty
-- Price must be greater than 0
 - Quantity must be 0 or greater
+- Category and subcategory must be selected
 
 ## 🚀 Getting Started
 
@@ -118,7 +118,12 @@ const { data, error } = await supabase
 ```javascript
 const { data, error } = await supabase
   .from('products')
-  .insert([{ name, price, quantity }])
+  .insert([{
+    name,
+    quantity,
+    category_id,
+    image_url: optionalImageUrl
+  }])
   .select()
 ```
 

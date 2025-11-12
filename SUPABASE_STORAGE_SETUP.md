@@ -190,7 +190,7 @@ CREATE TABLE products (
   id BIGSERIAL PRIMARY KEY,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   name TEXT NOT NULL,
-  price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
+  price NUMERIC(10, 2) CHECK (price IS NULL OR price >= 0),
   quantity INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0),
   image_url TEXT  -- NEW COLUMN
 );

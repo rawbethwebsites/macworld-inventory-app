@@ -14,7 +14,6 @@ export default function InventoryExample() {
     name: '',
     description: '',
     quantity: 0,
-    price: 0,
     category: ''
   })
 
@@ -22,7 +21,7 @@ export default function InventoryExample() {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'quantity' || name === 'price' ? Number(value) : value
+      [name]: name === 'quantity' ? Number(value) : value
     }))
   }
 
@@ -56,7 +55,6 @@ export default function InventoryExample() {
       name: item.name,
       description: item.description || '',
       quantity: item.quantity,
-      price: item.price,
       category: item.category || ''
     })
     setIsAddingItem(true)
@@ -76,7 +74,6 @@ export default function InventoryExample() {
       name: '',
       description: '',
       quantity: 0,
-      price: 0,
       category: ''
     })
     setIsAddingItem(false)
@@ -164,21 +161,6 @@ export default function InventoryExample() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Price *
-                  </label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
               </div>
 
               <div>
@@ -233,9 +215,6 @@ export default function InventoryExample() {
                     Quantity
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -256,11 +235,6 @@ export default function InventoryExample() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{item.quantity}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        ${Number(item.price).toFixed(2)}
-                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button

@@ -13,38 +13,38 @@ INSERT INTO users (email, password, full_name, role) VALUES
 -- Note: The passwords above are placeholders. Use the application's registration endpoint to create users with properly hashed passwords.
 
 -- Insert sample products
-INSERT INTO products (name, description, category, sku, price, cost_price, quantity_in_stock, low_stock_threshold, created_by) VALUES
+INSERT INTO products (name, description, category, sku, cost_price, quantity_in_stock, low_stock_threshold, created_by) VALUES
 -- Smartphones
-('iPhone 14 Pro Max', 'Latest Apple flagship smartphone with A16 Bionic chip, 256GB', 'Smartphones', 'IPH14PM256', 850000, 750000, 15, 5, 1),
-('Samsung Galaxy S23 Ultra', 'Samsung flagship with S Pen, 256GB', 'Smartphones', 'SAMS23U256', 780000, 680000, 12, 5, 1),
-('Google Pixel 7 Pro', 'Google flagship with Tensor G2 chip, 128GB', 'Smartphones', 'GPIX7P128', 650000, 550000, 8, 5, 1),
-('OnePlus 11', '5G smartphone with Snapdragon 8 Gen 2, 256GB', 'Smartphones', 'OP11256', 520000, 450000, 10, 5, 1),
-('Xiaomi 13 Pro', 'Flagship phone with Leica camera, 256GB', 'Smartphones', 'XM13P256', 580000, 500000, 7, 5, 1),
+('iPhone 14 Pro Max', 'Latest Apple flagship smartphone with A16 Bionic chip, 256GB', 'Smartphones', 'IPH14PM256', 750000, 15, 5, 1),
+('Samsung Galaxy S23 Ultra', 'Samsung flagship with S Pen, 256GB', 'Smartphones', 'SAMS23U256', 680000, 12, 5, 1),
+('Google Pixel 7 Pro', 'Google flagship with Tensor G2 chip, 128GB', 'Smartphones', 'GPIX7P128', 550000, 8, 5, 1),
+('OnePlus 11', '5G smartphone with Snapdragon 8 Gen 2, 256GB', 'Smartphones', 'OP11256', 450000, 10, 5, 1),
+('Xiaomi 13 Pro', 'Flagship phone with Leica camera, 256GB', 'Smartphones', 'XM13P256', 500000, 7, 5, 1),
 
 -- Laptops
-('MacBook Pro 16"', 'M2 Pro chip, 16GB RAM, 512GB SSD', 'Laptops', 'MBP16M2', 1850000, 1650000, 8, 3, 1),
-('Dell XPS 15', 'Intel i7, 16GB RAM, 512GB SSD, 4K display', 'Laptops', 'DXPS15I7', 1200000, 1050000, 6, 3, 1),
-('HP Spectre x360', 'Intel i7, 16GB RAM, 1TB SSD, 2-in-1 convertible', 'Laptops', 'HPSP360', 1100000, 950000, 5, 3, 1),
-('Lenovo ThinkPad X1', 'Intel i7, 16GB RAM, 512GB SSD, Business laptop', 'Laptops', 'LNTPX1', 980000, 850000, 4, 3, 1),
-('ASUS ROG Zephyrus', 'Gaming laptop, RTX 4070, 32GB RAM, 1TB SSD', 'Laptops', 'ASROG14', 1650000, 1450000, 3, 2, 1),
+('MacBook Pro 16"', 'M2 Pro chip, 16GB RAM, 512GB SSD', 'Laptops', 'MBP16M2', 1650000, 8, 3, 1),
+('Dell XPS 15', 'Intel i7, 16GB RAM, 512GB SSD, 4K display', 'Laptops', 'DXPS15I7', 1050000, 6, 3, 1),
+('HP Spectre x360', 'Intel i7, 16GB RAM, 1TB SSD, 2-in-1 convertible', 'Laptops', 'HPSP360', 950000, 5, 3, 1),
+('Lenovo ThinkPad X1', 'Intel i7, 16GB RAM, 512GB SSD, Business laptop', 'Laptops', 'LNTPX1', 850000, 4, 3, 1),
+('ASUS ROG Zephyrus', 'Gaming laptop, RTX 4070, 32GB RAM, 1TB SSD', 'Laptops', 'ASROG14', 1450000, 3, 2, 1),
 
 -- Tablets
-('iPad Pro 12.9"', 'M2 chip, 256GB, WiFi + Cellular', 'Tablets', 'IPADPM2', 950000, 850000, 10, 4, 1),
-('Samsung Galaxy Tab S8+', 'Snapdragon 8 Gen 1, 256GB, S Pen included', 'Tablets', 'SGTS8P256', 620000, 550000, 8, 4, 1),
-('Microsoft Surface Pro 9', 'Intel i7, 16GB RAM, 256GB SSD', 'Tablets', 'MSSP9I7', 850000, 750000, 6, 3, 1),
+('iPad Pro 12.9"', 'M2 chip, 256GB, WiFi + Cellular', 'Tablets', 'IPADPM2', 850000, 10, 4, 1),
+('Samsung Galaxy Tab S8+', 'Snapdragon 8 Gen 1, 256GB, S Pen included', 'Tablets', 'SGTS8P256', 550000, 8, 4, 1),
+('Microsoft Surface Pro 9', 'Intel i7, 16GB RAM, 256GB SSD', 'Tablets', 'MSSP9I7', 750000, 6, 3, 1),
 
 -- Accessories
-('AirPods Pro 2', 'Active Noise Cancellation, USB-C', 'Accessories', 'APP2USBC', 180000, 150000, 25, 10, 1),
-('Samsung Galaxy Buds 2 Pro', 'Premium wireless earbuds with ANC', 'Accessories', 'SGB2PRO', 140000, 120000, 20, 10, 1),
-('Apple Magic Keyboard', 'For iPad Pro 12.9"', 'Accessories', 'AMKIPAD', 250000, 220000, 12, 5, 1),
-('Logitech MX Master 3S', 'Wireless mouse for professionals', 'Accessories', 'LGMXM3S', 85000, 70000, 15, 8, 1),
-('Anker PowerCore 20K', '20,000mAh power bank with PD charging', 'Accessories', 'ANKPC20K', 45000, 35000, 30, 15, 1),
-('Belkin USB-C Hub', '7-in-1 multiport adapter', 'Accessories', 'BLKUSBCH', 35000, 28000, 18, 10, 1),
+('AirPods Pro 2', 'Active Noise Cancellation, USB-C', 'Accessories', 'APP2USBC', 150000, 25, 10, 1),
+('Samsung Galaxy Buds 2 Pro', 'Premium wireless earbuds with ANC', 'Accessories', 'SGB2PRO', 120000, 20, 10, 1),
+('Apple Magic Keyboard', 'For iPad Pro 12.9"', 'Accessories', 'AMKIPAD', 220000, 12, 5, 1),
+('Logitech MX Master 3S', 'Wireless mouse for professionals', 'Accessories', 'LGMXM3S', 70000, 15, 8, 1),
+('Anker PowerCore 20K', '20,000mAh power bank with PD charging', 'Accessories', 'ANKPC20K', 35000, 30, 15, 1),
+('Belkin USB-C Hub', '7-in-1 multiport adapter', 'Accessories', 'BLKUSBCH', 28000, 18, 10, 1),
 
 -- Smartwatches
-('Apple Watch Series 9', 'GPS + Cellular, 45mm, Aluminum', 'Smartwatches', 'AWS9C45', 420000, 370000, 12, 5, 1),
-('Samsung Galaxy Watch 6', '44mm, Bluetooth, GPS', 'Smartwatches', 'SGW644', 280000, 240000, 10, 5, 1),
-('Garmin Fenix 7', 'Premium multisport GPS watch', 'Smartwatches', 'GARF7', 650000, 580000, 5, 3, 1);
+('Apple Watch Series 9', 'GPS + Cellular, 45mm, Aluminum', 'Smartwatches', 'AWS9C45', 370000, 12, 5, 1),
+('Samsung Galaxy Watch 6', '44mm, Bluetooth, GPS', 'Smartwatches', 'SGW644', 240000, 10, 5, 1),
+('Garmin Fenix 7', 'Premium multisport GPS watch', 'Smartwatches', 'GARF7', 580000, 5, 3, 1);
 
 -- Insert sample customers
 INSERT INTO customers (name, email, phone, address, city, state, country, created_by) VALUES

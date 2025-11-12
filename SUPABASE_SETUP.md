@@ -29,7 +29,7 @@ Once your project is ready:
 - `id` (int8) - Primary key, auto-increment ✓
 - `created_at` (timestamptz) - Default: now() ✓
 - `name` (text) - Required
-- `price` (numeric) - Required
+- `price` (numeric) - Optional (capture actual sale price later)
 - `quantity` (int4) - Required
 
 Or use this SQL directly:
@@ -41,7 +41,7 @@ CREATE TABLE products (
   id BIGSERIAL PRIMARY KEY,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   name TEXT NOT NULL,
-  price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
+  price NUMERIC(10, 2) CHECK (price IS NULL OR price >= 0),
   quantity INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0)
 );
 
@@ -114,27 +114,24 @@ You can add some test products in the Supabase dashboard:
 
 ```
 Name: iPhone 14 Pro
-Price: 850000
 Quantity: 15
 
 Name: MacBook Air M2
-Price: 1200000
 Quantity: 8
 
 Name: AirPods Pro
-Price: 180000
 Quantity: 25
 ```
 
 Or use SQL:
 
 ```sql
-INSERT INTO products (name, price, quantity) VALUES
-  ('iPhone 14 Pro', 850000, 15),
-  ('MacBook Air M2', 1200000, 8),
-  ('AirPods Pro', 180000, 25),
-  ('Samsung Galaxy S23', 780000, 12),
-  ('Dell XPS 15', 1100000, 6);
+INSERT INTO products (name, quantity) VALUES
+  ('iPhone 14 Pro', 15),
+  ('MacBook Air M2', 8),
+  ('AirPods Pro', 25),
+  ('Samsung Galaxy S23', 12),
+  ('Dell XPS 15', 6);
 ```
 
 ## 🔒 Security Notes
@@ -212,10 +209,10 @@ Current schema for the products table:
 ```typescript
 interface Product {
   id: number                    // Auto-generated
-  created_at: string           // Auto-generated timestamp
-  name: string                 // Product name
-  price: number                // Price in Naira
-  quantity: number             // Stock quantity
+  created_at: string             // Auto-generated timestamp
+  name: string                   // Product name
+  price: number | null           // Optional price recorded at sale time
+  quantity: number               // Stock quantity
 }
 ```
 

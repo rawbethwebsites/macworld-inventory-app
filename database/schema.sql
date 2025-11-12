@@ -27,7 +27,7 @@ CREATE TABLE products (
     description TEXT,
     category VARCHAR(100),
     sku VARCHAR(100) UNIQUE NOT NULL,
-    price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+    price DECIMAL(10, 2) CHECK (price IS NULL OR price >= 0),
     cost_price DECIMAL(10, 2) CHECK (cost_price >= 0),
     quantity_in_stock INTEGER NOT NULL DEFAULT 0 CHECK (quantity_in_stock >= 0),
     low_stock_threshold INTEGER DEFAULT 10,

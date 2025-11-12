@@ -37,6 +37,13 @@ const Invoices = () => {
   const [productSearch, setProductSearch] = useState('')
   const [errors, setErrors] = useState({})
 
+  const getLineSubtotal = (item) => {
+    const price = parseFloat(item.unit_price) || 0
+    const quantity = parseInt(item.quantity, 10) || 0
+    const discount = parseFloat(item.discount) || 0
+    return Math.max(price * quantity - discount, 0)
+  }
+
   useEffect(() => {
     fetchInvoices()
     fetchProducts()
@@ -144,7 +151,13 @@ const Invoices = () => {
           ...prev,
           items: prev.items.map(item =>
             item.product_id === product.id
-              ? { ...item, quantity: item.quantity + 1, subtotal: (item.quantity + 1) * item.unit_price }
+              ? (() => {
+                  const updatedItem = {
+                    ...item,
+                    quantity: item.quantity + 1
+                  }
+                  return { ...updatedItem, subtotal: getLineSubtotal(updatedItem) }
+                })()
               : item
           )
         }))
@@ -160,9 +173,9 @@ const Invoices = () => {
           product_name: product.name,
           product_sku: product.id.toString(),
           quantity: 1,
-          unit_price: product.price,
+          unit_price: 0,
           discount: 0,
-          subtotal: product.price,
+          subtotal: 0,
           max_quantity: product.quantity
         }]
       }))
@@ -182,9 +195,29 @@ const Invoices = () => {
       ...prev,
       items: prev.items.map((item, i) =>
         i === index
-          ? { ...item, quantity, subtotal: quantity * item.unit_price - item.discount }
+          ? (() => {
+              const updatedItem = { ...item, quantity }
+              return { ...updatedItem, subtotal: getLineSubtotal(updatedItem) }
+            })()
           : item
       )
+    }))
+  }
+
+  const updateItemPrice = (index, priceValue) => {
+    const parsedPrice = parseFloat(priceValue)
+    if (parsedPrice < 0) return
+
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.map((item, i) => {
+        if (i === index) {
+          const unitPrice = Number.isNaN(parsedPrice) ? 0 : parsedPrice
+          const updatedItem = { ...item, unit_price: unitPrice }
+          return { ...updatedItem, subtotal: getLineSubtotal(updatedItem) }
+        }
+        return item
+      })
     }))
   }
 
@@ -195,8 +228,8 @@ const Invoices = () => {
     }))
   }
 
-  const calculateTotals = () => {
-    const subtotal = formData.items.reduce((sum, item) => sum + item.subtotal, 0)
+  const calculateTotals = (items = formData.items) => {
+    const subtotal = items.reduce((sum, item) => sum + getLineSubtotal(item), 0)
     const discount = parseFloat(formData.discount) || 0
     const tax = parseFloat(formData.tax) || 0
     const total = subtotal - discount + tax
@@ -215,6 +248,9 @@ const Invoices = () => {
     const newErrors = {}
     if (!formData.customerName.trim()) newErrors.customerName = 'Customer name is required'
     if (formData.items.length === 0) newErrors.items = 'Add at least one product'
+    if (!newErrors.items && formData.items.some(item => !item.unit_price || item.unit_price <= 0)) {
+      newErrors.items = 'Enter a sale price for every product being sold'
+    }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -225,7 +261,12 @@ const Invoices = () => {
 
     try {
       setSubmitting(true)
-      const { subtotal, total } = calculateTotals()
+      const normalizedItems = formData.items.map((item) => ({
+        ...item,
+        subtotal: getLineSubtotal(item)
+      }))
+
+      const { subtotal, total } = calculateTotals(normalizedItems)
       const amountPaid = parseFloat(formData.amountPaid) || 0
       
       let paymentStatus = 'unpaid'
@@ -258,7 +299,7 @@ const Invoices = () => {
       if (invoiceError) throw invoiceError
 
       // Add invoice items and deduct stock
-      for (const item of formData.items) {
+      for (const item of normalizedItems) {
         // Insert invoice item
         const { error: itemError } = await supabase
           .from('invoice_items')
@@ -684,7 +725,7 @@ const Invoices = () => {
                             className="w-full text-left px-4 py-2 hover:bg-gray-50 flex justify-between"
                           >
                             <span>{product.name}</span>
-                            <span className="text-gray-500">₦{product.price.toLocaleString()} | Stock: {product.quantity}</span>
+                          <span className="text-gray-500">Stock: {product.quantity}</span>
                           </button>
                         ))}
                       </div>
@@ -698,7 +739,26 @@ const Invoices = () => {
                         <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
                           <div className="flex-1">
                             <p className="font-medium text-gray-900">{item.product_name}</p>
-                            <p className="text-sm text-gray-500">₦{item.unit_price.toLocaleString()} each</p>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <label className="text-sm text-gray-500" htmlFor={`unit-price-${item.product_id}`}>
+                                Sale price (₦)
+                              </label>
+                              <input
+                                id={`unit-price-${item.product_id}`}
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={item.unit_price || ''}
+                                onChange={(e) => updateItemPrice(index, e.target.value)}
+                                className="w-32 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                placeholder="0.00"
+                              />
+                              {!item.unit_price && (
+                                <span className="text-xs text-red-600 font-medium">
+                                  Required before checkout
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
@@ -718,7 +778,9 @@ const Invoices = () => {
                             </button>
                           </div>
                           <div className="w-32 text-right">
-                            <p className="font-semibold text-gray-900">₦{item.subtotal.toLocaleString()}</p>
+                            <p className="font-semibold text-gray-900">
+                              ₦{getLineSubtotal(item).toLocaleString()}
+                            </p>
                           </div>
                           <button
                             type="button"

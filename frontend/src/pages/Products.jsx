@@ -18,7 +18,6 @@ const Products = () => {
   // Form state
   const [formData, setFormData] = useState({
     name: '',
-    price: '',
     quantity: '',
     parentCategoryId: '',
     categoryId: '',
@@ -226,7 +225,6 @@ const Products = () => {
   const validateForm = () => {
     const newErrors = {}
     if (!formData.name.trim()) newErrors.name = 'Product name is required'
-    if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Price must be greater than 0'
     if (!formData.quantity || parseInt(formData.quantity) < 0) newErrors.quantity = 'Quantity must be 0 or greater'
     if (!formData.categoryId) newErrors.categoryId = 'Please select a category'
     setErrors(newErrors)
@@ -255,7 +253,6 @@ const Products = () => {
         .from('products')
         .insert([{
           name: formData.name.trim(),
-          price: parseFloat(formData.price),
           quantity: parseInt(formData.quantity),
           category_id: parseInt(formData.categoryId),
           image_url: imageUrl
@@ -270,14 +267,13 @@ const Products = () => {
         URL.revokeObjectURL(formData.imagePreview)
       }
       
-      setFormData({ 
-        name: '', 
-        price: '', 
-        quantity: '', 
+      setFormData({
+        name: '',
+        quantity: '',
         parentCategoryId: '',
         categoryId: '',
-        image: null, 
-        imagePreview: null 
+        image: null,
+        imagePreview: null
       })
       setSubcategories([])
       setShowForm(false)
@@ -364,6 +360,22 @@ const Products = () => {
     </div>
   )
 
+  const totalStock = products.reduce((sum, p) => sum + (p.quantity || 0), 0)
+  const lowStockCount = products.filter((p) => {
+    const threshold = typeof p.low_stock_threshold === 'number' ? p.low_stock_threshold : 5
+    return (p.quantity || 0) <= threshold
+  }).length
+  const categoryCount = new Set(
+    products
+      .map((p) => {
+        if (p.category?.parent) {
+          return `${p.category.parent.name} → ${p.category.name}`
+        }
+        return p.category?.name || null
+      })
+      .filter(Boolean)
+  ).size
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -405,6 +417,9 @@ const Products = () => {
                 <div>
                   <p className="text-gray-500 text-sm font-medium">Total Products</p>
                   <p className="text-3xl font-bold text-gray-900 mt-1">{products.length}</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Across {categoryCount} category{categoryCount === 1 ? '' : 'ies'}
+                  </p>
                 </div>
                 <div className="bg-primary-100 p-3 rounded-full">
                   <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -419,7 +434,7 @@ const Products = () => {
                 <div>
                   <p className="text-gray-500 text-sm font-medium">Total Stock</p>
                   <p className="text-3xl font-bold text-gray-900 mt-1">
-                    {products.reduce((sum, p) => sum + (p.quantity || 0), 0)}
+                    {totalStock}
                   </p>
                 </div>
                 <div className="bg-green-100 p-3 rounded-full">
@@ -433,14 +448,17 @@ const Products = () => {
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm font-medium">Total Value</p>
+                  <p className="text-gray-500 text-sm font-medium">Low Stock Items</p>
                   <p className="text-3xl font-bold text-gray-900 mt-1">
-                    ₦{products.reduce((sum, p) => sum + (p.price * p.quantity || 0), 0).toLocaleString()}
+                    {lowStockCount}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Threshold uses item rule or 5 units by default
                   </p>
                 </div>
                 <div className="bg-yellow-100 p-3 rounded-full">
                   <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
@@ -500,14 +518,13 @@ const Products = () => {
                   onClick={() => {
                     setShowForm(false)
                     if (formData.imagePreview) URL.revokeObjectURL(formData.imagePreview)
-                    setFormData({ 
-                      name: '', 
-                      price: '', 
-                      quantity: '', 
+                    setFormData({
+                      name: '',
+                      quantity: '',
                       parentCategoryId: '',
                       categoryId: '',
-                      image: null, 
-                      imagePreview: null 
+                      image: null,
+                      imagePreview: null
                     })
                     setSubcategories([])
                     setErrors({})
@@ -582,24 +599,6 @@ const Products = () => {
                     {errors.categoryId && <p className="text-red-500 text-sm mt-1">{errors.categoryId}</p>}
                   </div>
 
-                  {/* Price */}
-                  <div>
-                    <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                      Price (₦) *
-                    </label>
-                    <input
-                      type="number"
-                      id="price"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleInputChange}
-                      step="0.01"
-                      min="0"
-                      className={`input-base ${errors.price ? 'border-red-500' : ''}`}
-                      placeholder="0.00"
-                    />
-                    {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
-                  </div>
 
                   {/* Quantity */}
                   <div>
@@ -675,14 +674,13 @@ const Products = () => {
                     onClick={() => {
                       setShowForm(false)
                       if (formData.imagePreview) URL.revokeObjectURL(formData.imagePreview)
-                      setFormData({ 
-                        name: '', 
-                        price: '', 
-                        quantity: '', 
+                      setFormData({
+                        name: '',
+                        quantity: '',
                         parentCategoryId: '',
                         categoryId: '',
-                        image: null, 
-                        imagePreview: null 
+                        image: null,
+                        imagePreview: null
                       })
                       setSubcategories([])
                       setErrors({})
@@ -772,21 +770,22 @@ const Products = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 py-4 border-y">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 border-y">
                     <div>
-                      <p className="text-sm text-gray-500 mb-1">Price</p>
-                      <p className="text-2xl font-bold text-gray-900">₦{parseFloat(selectedProduct.price).toLocaleString()}</p>
+                      <p className="text-sm text-gray-500 mb-1">Quantity on Hand</p>
+                      <p className="text-2xl font-bold text-gray-900">{selectedProduct.quantity}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500 mb-1">Quantity</p>
-                      <p className="text-2xl font-bold text-gray-900">{selectedProduct.quantity}</p>
+                      <p className="text-sm text-gray-500 mb-1">Low Stock Threshold</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {selectedProduct.low_stock_threshold ?? 5}
+                      </p>
                     </div>
                   </div>
 
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Total Value</p>
-                    <p className="text-xl font-bold text-gray-900">
-                      ₦{(selectedProduct.price * selectedProduct.quantity).toLocaleString()}
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                    <p className="text-sm text-blue-700">
+                      Sale price is captured during invoicing so you can enter the negotiated amount at checkout.
                     </p>
                   </div>
 
@@ -883,18 +882,20 @@ const Products = () => {
                     )}
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm text-gray-500">Price</p>
-                        <p className="text-xl font-bold text-gray-900">₦{parseFloat(product.price).toLocaleString()}</p>
+                        <p className="text-sm text-gray-500">Stock</p>
+                        <p className="text-xl font-bold text-gray-900">{product.quantity}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-500">Qty</p>
-                        <p className="text-xl font-bold text-gray-900">{product.quantity}</p>
+                        <p className="text-sm text-gray-500">Low Stock</p>
+                        <p className="text-xl font-bold text-gray-900">
+                          {product.low_stock_threshold ?? 5}
+                        </p>
                       </div>
                     </div>
                     <div className="mt-3 pt-3 border-t">
-                      <p className="text-sm text-gray-500">Total Value</p>
-                      <p className="text-lg font-semibold text-gray-900">
-                        ₦{(product.price * product.quantity).toLocaleString()}
+                      <p className="text-sm text-gray-500">Pricing</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        Set sale price during invoicing.
                       </p>
                     </div>
                   </div>
@@ -911,9 +912,8 @@ const Products = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Low Stock Threshold</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -947,14 +947,11 @@ const Products = () => {
                           <div className="text-sm text-gray-900">{getCategoryText(product)}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">₦{parseFloat(product.price).toLocaleString()}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{product.quantity}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            ₦{(product.price * product.quantity).toLocaleString()}
+                          <div className="text-sm text-gray-900">
+                            {product.low_stock_threshold ?? 5}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
