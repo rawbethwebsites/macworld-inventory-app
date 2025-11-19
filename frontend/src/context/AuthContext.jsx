@@ -225,6 +225,33 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const resetSessionTimer = () => {
+    if (typeof window === 'undefined') return
+    const timeoutMinutes = Number(import.meta.env.VITE_SESSION_TIMEOUT_MINUTES || 15)
+    const timeoutMs = timeoutMinutes * 60 * 1000
+    if (window.__macworldSessionTimeout) clearTimeout(window.__macworldSessionTimeout)
+    window.__macworldSessionTimeout = setTimeout(async () => {
+      console.log('Session timed out due to inactivity')
+      await logout()
+      window.location.href = '/'
+    }, timeoutMs)
+  }
+
+  useEffect(() => {
+    const events = ['click', 'mousemove', 'keydown', 'scroll']
+    const handleActivity = () => {
+      if (user) resetSessionTimer()
+    }
+
+    events.forEach((event) => document.addEventListener(event, handleActivity))
+    resetSessionTimer()
+
+    return () => {
+      events.forEach((event) => document.removeEventListener(event, handleActivity))
+      if (window.__macworldSessionTimeout) clearTimeout(window.__macworldSessionTimeout)
+    }
+  }, [user])
+
   const updateProfile = async (updates) => {
     try {
       if (!user) throw new Error('Not authenticated')
@@ -275,7 +302,8 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     isAdmin,
     isStaff,
-    hasRole
+    hasRole,
+    resetSessionTimer
   }
 
   return (

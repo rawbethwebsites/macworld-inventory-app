@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 const Login = () => {
@@ -230,8 +230,11 @@ const Login = () => {
         </div>
 
         {/* Footer */}
-        <div className="text-center text-sm text-gray-600">
+        <div className="text-center text-sm text-gray-600 space-y-2">
           <p>© 2025 Macworld Inventory System. All rights reserved.</p>
+          <Link to="/" className="text-primary-600 hover:text-primary-500 font-semibold">
+            ← Back to Homepage
+          </Link>
         </div>
       </div>
     </div>
