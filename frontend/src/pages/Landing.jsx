@@ -370,10 +370,10 @@ Once every field is collected, confirm the summary and tell the client you will 
           </div>
         </div>
 
-        {/* Chat assistant area now wired to OpenRouter with graceful fallback */}
+        {/* Concierge chat area with graceful fallback */}
         <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col gap-6 border border-gray-100">
           <div>
-            <p className="text-sm font-semibold text-brand-red uppercase tracking-[0.3em]">AI Concierge</p>
+            <p className="text-sm font-semibold text-brand-red uppercase tracking-[0.3em]">Client Concierge</p>
             <h2 className="text-2xl font-bold text-brand-dark">Need bespoke support?</h2>
             <p className="text-gray-600">Chat with Rob to ask about device availability, corporate packages, or appointments.</p>
           </div>
@@ -452,7 +452,7 @@ Once every field is collected, confirm the summary and tell the client you will 
                 </div>
               )}
               <p className="text-xs text-gray-400">
-                Rob uses OpenRouter to answer as a MacWORLD specialist.
+                Your chat is saved temporarily so our team can follow up.
               </p>
             </>
           ) : (
