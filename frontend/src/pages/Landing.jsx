@@ -8,6 +8,8 @@ const Landing = () => {
   const openRouterApiKey = import.meta.env.VITE_REACT_APP_OPENROUTER_API_KEY || import.meta.env.REACT_APP_OPENROUTER_API_KEY || ''
   const adminEmailEnv = import.meta.env.VITE_REACT_APP_ADMIN_EMAIL || import.meta.env.REACT_APP_ADMIN_EMAIL || ''
   const supportEmailEnv = import.meta.env.VITE_REACT_APP_SUPPORT_EMAIL || import.meta.env.REACT_APP_SUPPORT_EMAIL || ''
+  const storageKey = 'macworld_rob_chat_state'
+  const cookieKey = 'macworld_rob_client'
   // System instruction keeps Rob on-brand for every request (updated with explicit MacWORLD context)
   const systemPrompt = `
 You are Rob, a MacWORLD Gallery Ltd. assistant based at Shop B18-a, Emab Plaza, Wuse II, Abuja (open Mon-Sat, 9am-7pm).
@@ -36,10 +38,90 @@ Stay friendly, human, and knowledgeable. Never say you are a bot.`
   const [appointmentLog, setAppointmentLog] = useState(null)
   const [emailStatus, setEmailStatus] = useState({ status: 'idle', message: '' })
 
+  const getCookie = (name) => {
+    if (typeof document === 'undefined') return null
+    const value = `; ${document.cookie}`
+    const parts = value.split(`; ${name}=`)
+    if (parts.length === 2) {
+      return parts.pop()?.split(';').shift() || null
+    }
+    return null
+  }
+
+  const setCookie = (name, value, days = 7) => {
+    if (typeof document === 'undefined') return
+    const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString()
+    document.cookie = `${name}=${value}; expires=${expires}; path=/`
+  }
+
   // Lightweight verification log to ensure the API key is detected during development
   useEffect(() => {
     console.log('Rob OpenRouter key detected:', Boolean(openRouterApiKey))
   }, [openRouterApiKey])
+
+  // Load chat state from localStorage/cookie so visitors don't lose context on refresh
+  useEffect(() => {
+    try {
+      const savedState = localStorage.getItem(storageKey)
+      if (savedState) {
+        const parsed = JSON.parse(savedState)
+        if (parsed.messages) setChatMessages(parsed.messages)
+        if (parsed.conversationStep) setConversationStep(parsed.conversationStep)
+        if (parsed.deviceInfo) setDeviceInfo(parsed.deviceInfo)
+        if (parsed.contactInfo) setContactInfo(parsed.contactInfo)
+        if (parsed.clientName) setClientName(parsed.clientName)
+        if (parsed.clientPhone) setClientPhone(parsed.clientPhone)
+        if (parsed.clientEmail) setClientEmail(parsed.clientEmail)
+        if (parsed.preferredTime) setPreferredTime(parsed.preferredTime)
+        if (parsed.appointmentLog) setAppointmentLog(parsed.appointmentLog)
+        if (parsed.emailStatus) setEmailStatus(parsed.emailStatus)
+      } else {
+        const cookieData = getCookie(cookieKey)
+        if (cookieData) {
+          const info = JSON.parse(decodeURIComponent(cookieData))
+          if (info.clientName) setClientName(info.clientName)
+          if (info.clientEmail) setClientEmail(info.clientEmail)
+          if (info.clientPhone) setClientPhone(info.clientPhone)
+          if (info.preferredTime) setPreferredTime(info.preferredTime)
+          if (info.device) setDeviceInfo(info.device)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to parse stored chat state', error)
+    }
+  }, [])
+
+  // Persist chat state whenever it changes
+  useEffect(() => {
+    const stateToStore = {
+      messages: chatMessages,
+      conversationStep,
+      deviceInfo,
+      contactInfo,
+      clientName,
+      clientPhone,
+      clientEmail,
+      preferredTime,
+      appointmentLog,
+      emailStatus,
+    }
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(stateToStore))
+    } catch (error) {
+      console.warn('Unable to persist chat state', error)
+    }
+  }, [
+    chatMessages,
+    conversationStep,
+    deviceInfo,
+    contactInfo,
+    clientName,
+    clientPhone,
+    clientEmail,
+    preferredTime,
+    appointmentLog,
+    emailStatus,
+  ])
 
   // Compose a workflow hint so Rob knows which detail to ask for next
   const getWorkflowInstruction = (device, contact, email, time, nextStep) => {
@@ -214,6 +296,11 @@ Once every field is collected, confirm the summary and tell the client you will 
         }
         console.log('Rob appointment request:', appointmentDetails)
         setAppointmentLog(appointmentDetails)
+        try {
+          setCookie(cookieKey, encodeURIComponent(JSON.stringify(appointmentDetails)))
+        } catch (error) {
+          console.warn('Unable to store appointment cookie', error)
+        }
         if (updatedClientEmail) {
           await sendAppointmentEmails(appointmentDetails, [...updatedHistory, { role: 'assistant', content: aiMessage.content.trim() }])
         } else {
@@ -249,7 +336,7 @@ Once every field is collected, confirm the summary and tell the client you will 
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
-              to="/login"
+              to="/coming-soon"
               className="btn-primary shadow-lg shadow-primary-200"
             >
               Client Login

@@ -5,6 +5,7 @@ import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
+import ComingSoon from './pages/ComingSoon'
 import Products from './pages/Products'
 import Categories from './pages/Categories'
 import Invoices from './pages/Invoices'
@@ -28,6 +29,7 @@ function AppRoutes() {
         {/* Public marketing/entry routes */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/coming-soon" element={<ComingSoon />} />
         
         {/* Auth-only application routes */}
         <Route
