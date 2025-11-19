@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import dotenv from 'dotenv'
+import emailRoutes from './routes/emailRoutes.js'
 
 // Import routes (will be created later)
 // import authRoutes from './routes/authRoutes.js'
@@ -39,11 +40,8 @@ app.get('/api/health', (req, res) => {
 })
 
 // API Routes (will be uncommented when routes are created)
+app.use('/api', emailRoutes)
 // app.use('/api/auth', authRoutes)
-// app.use('/api/products', productRoutes)
-// app.use('/api/invoices', invoiceRoutes)
-// app.use('/api/customers', customerRoutes)
-// app.use('/api/dashboard', dashboardRoutes)
 
 // 404 handler
 app.use((req, res) => {
@@ -70,4 +68,3 @@ app.use((err, req, res, next) => {
 // })
 
 export default app
-

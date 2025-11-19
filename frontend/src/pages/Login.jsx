@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
@@ -11,17 +11,10 @@ const Login = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const { login, signup, isAuthenticated } = useAuth()
+  const { login, signup } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      const from = location.state?.from?.pathname || '/'
-      navigate(from, { replace: true })
-    }
-  }, [isAuthenticated, navigate, location])
+  const defaultDashboardPath = '/products' // Ensure successful auth always lands inside the app
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -46,7 +39,8 @@ const Login = () => {
       } else {
         const result = await login(email, password)
         if (result.success) {
-          const from = location.state?.from?.pathname || '/'
+          // Default to products dashboard so users skip the marketing landing page post-login
+          const from = location.state?.from?.pathname || defaultDashboardPath
           navigate(from, { replace: true })
         } else {
           setError(result.message)
@@ -60,24 +54,36 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-brand-dark/5 via-white to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Logo and Header */}
-        <div className="text-center">
+        <div className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="w-16 h-16 bg-primary-600 rounded-lg flex items-center justify-center">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
+            <div className="flex flex-col items-center gap-2">
+              <div className="logo-mark" aria-hidden="true">
+                <span className="logo-arc arc-large"></span>
+                <span className="logo-arc arc-medium"></span>
+                <span className="logo-arc arc-small"></span>
+                <span className="logo-dot"></span>
+              </div>
+              <div className="text-[10px] font-semibold tracking-[0.35em] text-brand-yellow uppercase">
+                RC 1755259
+              </div>
             </div>
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            {isSignup ? 'Create your account' : 'Sign in to Macworld'}
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black">
+              <span className="text-brand-gray">Mac</span>
+              <span className="text-brand-dark">WORLD</span>
+            </h1>
+            <p className="text-sm font-semibold tracking-[0.4em] text-brand-red uppercase">
+              Gallery Ltd.
+            </p>
+          </div>
+          <p className="text-sm text-gray-600">
             {isSignup
               ? 'Start managing your inventory and invoices'
-              : 'Manage your inventory and invoices'}
+              : 'Sign in to manage your inventory and invoices'}
           </p>
         </div>
 
@@ -233,4 +239,3 @@ const Login = () => {
 }
 
 export default Login
-

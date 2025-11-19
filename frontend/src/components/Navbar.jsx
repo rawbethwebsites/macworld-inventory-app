@@ -54,11 +54,14 @@ const Navbar = () => {
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       {/* Top Bar */}
-      <div className="bg-primary-600 text-white py-2 px-4">
+      <div className="bg-brand-dark text-white py-2 px-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center text-sm">
           <div className="flex items-center gap-4">
-            <span>📍 Shop B18-a, Emab Plaza. Wuse ii, Abuja</span>
+            <span>📍 Shop B18-a, Emab Plaza. Wuse II, Abuja</span>
             <span>📞 +234 816 836 6739</span>
+            <span className="hidden md:inline text-xs font-semibold text-brand-yellow">
+              RC: 1755259
+            </span>
           </div>
           <div className="flex items-center gap-4">
             {loading ? (
@@ -74,7 +77,7 @@ const Navbar = () => {
                       Welcome, {userProfile.full_name || userProfile.email}!
                     </span>
                     {isAdmin() && (
-                      <span className="px-2 py-1 bg-yellow-500 text-yellow-900 rounded text-xs font-semibold">
+                      <span className="px-2 py-1 bg-brand-yellow text-brand-dark rounded text-xs font-semibold">
                         ADMIN
                       </span>
                     )}
@@ -144,14 +147,18 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Macworld</h1>
-              <p className="text-xs text-gray-500">Inventory System</p>
+            {/* Brand wordmark rendered in text so colours remain crisp everywhere */}
+            <div className="leading-tight">
+              <div className="text-[10px] font-semibold tracking-wide text-brand-yellow uppercase">
+                RC: 1755259
+              </div>
+              <h1 className="text-xl font-bold">
+                <span className="text-brand-gray">Mac</span>
+                <span className="text-brand-dark">WORLD</span>
+              </h1>
+              <p className="text-[11px] font-semibold tracking-wide text-brand-red uppercase">
+                Gallery Ltd.
+              </p>
             </div>
           </Link>
 
@@ -295,4 +302,3 @@ const Navbar = () => {
 }
 
 export default Navbar
-

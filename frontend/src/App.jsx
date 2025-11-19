@@ -1,8 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { useAuth } from './hooks/useAuth'
 import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
+import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Products from './pages/Products'
 import Categories from './pages/Categories'
@@ -16,23 +17,19 @@ import Admin from './pages/Admin'
 
 function AppRoutes() {
   const { isAuthenticated, loading } = useAuth()
+  const location = useLocation()
+  const isLandingPage = location.pathname === '/'
 
   return (
     <>
-      {isAuthenticated && !loading && <Navbar />}
+      {/* Only show the authenticated navbar on app pages (never on the public landing page) */}
+      {isAuthenticated && !loading && !isLandingPage && <Navbar />}
       <Routes>
-        {/* Public routes */}
+        {/* Public marketing/entry routes */}
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         
-        {/* Protected routes */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Products />
-            </ProtectedRoute>
-          }
-        />
+        {/* Auth-only application routes */}
         <Route
           path="/products"
           element={
@@ -102,4 +99,3 @@ function App() {
 }
 
 export default App
-

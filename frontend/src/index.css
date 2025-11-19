@@ -59,3 +59,50 @@
   }
 }
 
+/* CSS-built MacWORLD logo (used on login page) */
+.logo-mark {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+
+.logo-arc {
+  position: absolute;
+  right: 0;
+  border-radius: 0 100% 100% 0;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.15));
+}
+
+.logo-arc.arc-large {
+  width: 72px;
+  height: 40px;
+  top: 0;
+  background: #facc15; /* brand yellow */
+}
+
+.logo-arc.arc-medium {
+  width: 58px;
+  height: 30px;
+  top: 16px;
+  right: 8px;
+  background: #22c55e; /* bright green */
+}
+
+.logo-arc.arc-small {
+  width: 44px;
+  height: 22px;
+  top: 30px;
+  right: 16px;
+  background: #15803d; /* deep green */
+}
+
+.logo-dot {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #facc15;
+  bottom: 6px;
+  left: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
