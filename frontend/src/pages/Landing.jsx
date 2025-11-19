@@ -31,7 +31,6 @@ Stay friendly, human, and knowledgeable. Never say you are a bot.`
   const [chatError, setChatError] = useState('')
   const [conversationStep, setConversationStep] = useState('device')
   const [deviceInfo, setDeviceInfo] = useState('')
-  const [contactInfo, setContactInfo] = useState('')
   const [clientName, setClientName] = useState('')
   const [clientPhone, setClientPhone] = useState('')
   const [clientEmail, setClientEmail] = useState('')
@@ -69,7 +68,6 @@ Stay friendly, human, and knowledgeable. Never say you are a bot.`
         if (parsed.messages) setChatMessages(parsed.messages)
         if (parsed.conversationStep) setConversationStep(parsed.conversationStep)
         if (parsed.deviceInfo) setDeviceInfo(parsed.deviceInfo)
-        if (parsed.contactInfo) setContactInfo(parsed.contactInfo)
         if (parsed.clientName) setClientName(parsed.clientName)
         if (parsed.clientPhone) setClientPhone(parsed.clientPhone)
         if (parsed.clientEmail) setClientEmail(parsed.clientEmail)
@@ -98,7 +96,6 @@ Stay friendly, human, and knowledgeable. Never say you are a bot.`
       messages: chatMessages,
       conversationStep,
       deviceInfo,
-      contactInfo,
       clientName,
       clientPhone,
       clientEmail,
@@ -115,7 +112,6 @@ Stay friendly, human, and knowledgeable. Never say you are a bot.`
     chatMessages,
     conversationStep,
     deviceInfo,
-    contactInfo,
     clientName,
     clientPhone,
     clientEmail,
@@ -125,18 +121,20 @@ Stay friendly, human, and knowledgeable. Never say you are a bot.`
   ])
 
   // Compose a workflow hint so Rob knows which detail to ask for next
-  const getWorkflowInstruction = (device, contact, email, time, nextStep) => {
+  const getWorkflowInstruction = (device, name, phone, email, time, nextStep) => {
     return `
 Current appointment capture status:
-- Device info: ${device || 'pending'}
-- Contact info: ${contact || 'pending'}
-- Email: ${email || 'pending'}
-- Preferred time: ${time || 'pending'}
+ - Device info: ${device || 'pending'}
+ - Client name: ${name || 'pending'}
+ - Phone: ${phone || 'pending'}
+ - Email: ${email || 'pending'}
+ - Preferred time: ${time || 'pending'}
 Next required step: ${nextStep}.
 If device info is pending, ask for make/model.
-If contact info is pending, thank them for the device info and ask for their full name plus phone number in one sentence.
-If the email is pending, ask for the best email to send confirmations.
-If preferred time is pending, offer morning, afternoon, or evening (or specific time) options.
+If the name is pending, ask for the client’s full name.
+If the phone is pending, ask only for their best phone number.
+If the email is pending, ask for the email to send confirmations.
+If preferred time is pending, offer morning, afternoon, or evening options.
 Once every field is collected, confirm the summary and tell the client you will relay it to admin. Keep answers under two sentences.`
   }
 
@@ -204,7 +202,6 @@ Once every field is collected, confirm the summary and tell the client you will 
 
     // Track info collection in local copies so we can guide Rob's next question
     let updatedDeviceInfo = deviceInfo
-    let updatedContactInfo = contactInfo
     let updatedClientName = clientName
     let updatedClientPhone = clientPhone
     let updatedClientEmail = clientEmail
@@ -213,33 +210,17 @@ Once every field is collected, confirm the summary and tell the client you will 
 
     if (conversationStep === 'device' && !deviceInfo) {
       updatedDeviceInfo = userText
-      nextStep = 'contact'
-    } else if (conversationStep === 'contact' && !contactInfo) {
-      updatedContactInfo = userText
-      const [namePart, ...rest] = userText.split(',')
-      if (!clientName && namePart) {
-        updatedClientName = namePart.trim()
-      }
-      if (!clientPhone) {
-        const joined = rest.join(',').trim()
-        if (joined) {
-          updatedClientPhone = joined
-        } else {
-          const fallbackDigits = userText.match(/(\+?\d[\d\s-]{6,})/)
-          if (fallbackDigits) {
-            updatedClientPhone = fallbackDigits[0].trim()
-          }
-        }
-      }
-      const emailMatch = userText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)
-      if (!clientEmail && emailMatch) {
-        updatedClientEmail = emailMatch[0]
-        nextStep = 'time'
-      } else {
-        nextStep = 'email'
-      }
+      nextStep = 'name'
+    } else if (conversationStep === 'name' && !clientName) {
+      updatedClientName = userText
+      nextStep = 'phone'
+    } else if (conversationStep === 'phone' && !clientPhone) {
+      const digits = userText.match(/[+\d][\d\s().-]{6,}/)
+      updatedClientPhone = digits ? digits[0].trim() : userText
+      nextStep = 'email'
     } else if (conversationStep === 'email' && !clientEmail) {
-      updatedClientEmail = userText
+      const emailMatch = userText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)
+      updatedClientEmail = emailMatch ? emailMatch[0] : userText
       nextStep = 'time'
     } else if (conversationStep === 'time' && !preferredTime) {
       updatedPreferredTime = userText
@@ -247,7 +228,6 @@ Once every field is collected, confirm the summary and tell the client you will 
     }
 
     setDeviceInfo(updatedDeviceInfo)
-    setContactInfo(updatedContactInfo)
     setClientName(updatedClientName)
     setClientPhone(updatedClientPhone)
     setClientEmail(updatedClientEmail)
@@ -265,7 +245,7 @@ Once every field is collected, confirm the summary and tell the client you will 
           model: 'openrouter/auto',
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'system', content: getWorkflowInstruction(updatedDeviceInfo, updatedContactInfo, updatedClientEmail, updatedPreferredTime, nextStep) },
+            { role: 'system', content: getWorkflowInstruction(updatedDeviceInfo, updatedClientName, updatedClientPhone, updatedClientEmail, updatedPreferredTime, nextStep) },
             ...updatedHistory,
           ],
         }),
@@ -288,7 +268,6 @@ Once every field is collected, confirm the summary and tell the client you will 
       if (nextStep === 'complete') {
         const appointmentDetails = {
           device: updatedDeviceInfo,
-          contact: updatedContactInfo,
           clientName: updatedClientName || 'MacWORLD Client',
           clientPhone: updatedClientPhone || 'Not provided',
           clientEmail: updatedClientEmail,
