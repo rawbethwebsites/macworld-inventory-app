@@ -47,8 +47,12 @@ const Navbar = () => {
     { name: 'Customers', path: '/customers', icon: '👥' },
   ]
 
-  const navLinks = isAdmin() 
-    ? [...baseNavLinks, { name: 'Admin', path: '/admin', icon: '⚙️' }]
+  const navLinks = isAdmin()
+    ? [
+        ...baseNavLinks,
+        { name: 'Admin', path: '/admin', icon: '⚙️' },
+        { name: 'Inbox', path: '/admin/notifications', icon: '💬' }
+      ]
     : baseNavLinks
 
   return (

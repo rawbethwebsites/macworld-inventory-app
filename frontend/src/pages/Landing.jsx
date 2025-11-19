@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../utils/api'
+import { persistChatSession } from '../utils/chatService'
 
 // Public-facing landing page that speaks to MacWORLD clients rather than internal users
 const Landing = () => {
@@ -301,8 +302,20 @@ Once every field is collected, confirm the summary and tell the client you will 
         } catch (error) {
           console.warn('Unable to store appointment cookie', error)
         }
+        const finalHistory = [...updatedHistory, { role: 'assistant', content: aiMessage.content.trim() }]
         if (updatedClientEmail) {
-          await sendAppointmentEmails(appointmentDetails, [...updatedHistory, { role: 'assistant', content: aiMessage.content.trim() }])
+          await sendAppointmentEmails(appointmentDetails, finalHistory)
+          try {
+            await persistChatSession({
+              clientName: appointmentDetails.clientName,
+              clientEmail: appointmentDetails.clientEmail,
+              clientPhone: appointmentDetails.clientPhone,
+              device: appointmentDetails.device,
+              preferredTime: appointmentDetails.preferredTime,
+            }, finalHistory)
+          } catch (persistError) {
+            console.error('Failed to persist chat session:', persistError)
+          }
         } else {
           setEmailStatus({
             status: 'error',
@@ -379,7 +392,7 @@ Once every field is collected, confirm the summary and tell the client you will 
           </div>
           {openRouterApiKey ? (
             <>
-              <div className="flex-1 rounded-2xl border border-gray-200 bg-gray-50 p-4 flex flex-col gap-4">
+              <div className="flex-1 rounded-2xl border border-gray-200 bg-gray-50 p-4 flex flex-col gap-4 max-h-[520px]">
                 <div className="flex-1 overflow-y-auto space-y-4 pr-2">
                   {chatMessages.map((message, index) => (
                     <div

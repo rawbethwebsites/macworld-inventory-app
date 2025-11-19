@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import ComingSoon from './pages/ComingSoon'
+import AdminNotifications from './pages/AdminNotifications'
 import Products from './pages/Products'
 import Categories from './pages/Categories'
 import Invoices from './pages/Invoices'
@@ -30,6 +31,14 @@ function AppRoutes() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/coming-soon" element={<ComingSoon />} />
+        <Route
+          path="/admin/notifications"
+          element={
+            <ProtectedRoute requireAdmin>
+              <AdminNotifications />
+            </ProtectedRoute>
+          }
+        />
         
         {/* Auth-only application routes */}
         <Route
