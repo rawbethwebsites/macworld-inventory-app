@@ -3,12 +3,65 @@ import { Link } from 'react-router-dom'
 import api from '../utils/api'
 import { persistChatSession } from '../utils/chatService'
 
+const extractEmail = (text) => {
+  const match = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)
+  return match ? match[0] : null
+}
+
+const extractPhone = (text) => {
+  const match = text.match(/[+]?[\d][\d\s().-]{6,}/)
+  if (!match) return null
+  const normalized = match[0].replace(/[^\d+]/g, '')
+  return normalized.length >= 7 ? normalized : null
+}
+
+const extractPreferredTime = (text) => {
+  const match = text.match(/\b(morning|afternoon|evening|tonight|today|tomorrow|weekend|next week|anytime|noon)\b/i)
+  return match ? match[0].toLowerCase() : null
+}
+
+const looksLikeName = (text) => {
+  const trimmed = text.trim()
+  if (!trimmed || !/[a-zA-Z]/.test(trimmed)) return false
+  if (extractEmail(trimmed) || extractPhone(trimmed) || extractPreferredTime(trimmed)) return false
+  return true
+}
+
+const appendDeviceDetail = (existing, addition) => {
+  const detail = addition.trim()
+  if (!detail) return existing
+  const lowerExisting = existing.toLowerCase()
+  if (lowerExisting.includes(detail.toLowerCase())) return existing
+  return `${existing} ${detail}`.trim()
+}
+
+const deriveConversationStep = ({ deviceInfo, clientName, clientPhone, clientEmail, preferredTime }) => {
+  if (!deviceInfo) return 'device'
+  if (!clientName) return 'name'
+  if (!clientPhone) return 'phone'
+  if (!clientEmail) return 'email'
+  if (!preferredTime) return 'time'
+  return 'complete'
+}
+
 // Public-facing landing page that speaks to MacWORLD clients rather than internal users
 const Landing = () => {
   // Pull the OpenRouter key from env (supports both Vite + legacy prefixes just in case)
-  const openRouterApiKey = import.meta.env.VITE_REACT_APP_OPENROUTER_API_KEY || import.meta.env.REACT_APP_OPENROUTER_API_KEY || ''
-  const adminEmailEnv = import.meta.env.VITE_REACT_APP_ADMIN_EMAIL || import.meta.env.REACT_APP_ADMIN_EMAIL || ''
-  const supportEmailEnv = import.meta.env.VITE_REACT_APP_SUPPORT_EMAIL || import.meta.env.REACT_APP_SUPPORT_EMAIL || ''
+  const openRouterApiKey =
+    import.meta.env.VITE_OPENROUTER_API_KEY ||
+    import.meta.env.VITE_REACT_APP_OPENROUTER_API_KEY ||
+    import.meta.env.REACT_APP_OPENROUTER_API_KEY ||
+    ''
+  const adminEmailEnv =
+    import.meta.env.VITE_ADMIN_EMAIL ||
+    import.meta.env.VITE_REACT_APP_ADMIN_EMAIL ||
+    import.meta.env.REACT_APP_ADMIN_EMAIL ||
+    ''
+  const supportEmailEnv =
+    import.meta.env.VITE_SUPPORT_EMAIL ||
+    import.meta.env.VITE_REACT_APP_SUPPORT_EMAIL ||
+    import.meta.env.REACT_APP_SUPPORT_EMAIL ||
+    ''
   const storageKey = 'macworld_rob_chat_state'
   const cookieKey = 'macworld_rob_client'
   // System instruction keeps Rob on-brand for every request (updated with explicit MacWORLD context)
@@ -69,28 +122,72 @@ Stay friendly, human, and knowledgeable. Never say you are a bot.`
   useEffect(() => {
     try {
       const savedState = localStorage.getItem(storageKey)
+      let restoredDevice = deviceInfo
+      let restoredName = clientName
+      let restoredPhone = clientPhone
+      let restoredEmail = clientEmail
+      let restoredPreferredTime = preferredTime
+
       if (savedState) {
         const parsed = JSON.parse(savedState)
         if (parsed.messages) setChatMessages(parsed.messages)
-        if (parsed.conversationStep) setConversationStep(parsed.conversationStep)
-        if (parsed.deviceInfo) setDeviceInfo(parsed.deviceInfo)
-        if (parsed.clientName) setClientName(parsed.clientName)
-        if (parsed.clientPhone) setClientPhone(parsed.clientPhone)
-        if (parsed.clientEmail) setClientEmail(parsed.clientEmail)
-        if (parsed.preferredTime) setPreferredTime(parsed.preferredTime)
+        if (parsed.deviceInfo) {
+          setDeviceInfo(parsed.deviceInfo)
+          restoredDevice = parsed.deviceInfo
+        }
+        if (parsed.clientName) {
+          setClientName(parsed.clientName)
+          restoredName = parsed.clientName
+        }
+        if (parsed.clientPhone) {
+          setClientPhone(parsed.clientPhone)
+          restoredPhone = parsed.clientPhone
+        }
+        if (parsed.clientEmail) {
+          setClientEmail(parsed.clientEmail)
+          restoredEmail = parsed.clientEmail
+        }
+        if (parsed.preferredTime) {
+          setPreferredTime(parsed.preferredTime)
+          restoredPreferredTime = parsed.preferredTime
+        }
         if (parsed.appointmentLog) setAppointmentLog(parsed.appointmentLog)
         if (parsed.emailStatus) setEmailStatus(parsed.emailStatus)
       } else {
         const cookieData = getCookie(cookieKey)
         if (cookieData) {
           const info = JSON.parse(decodeURIComponent(cookieData))
-          if (info.clientName) setClientName(info.clientName)
-          if (info.clientEmail) setClientEmail(info.clientEmail)
-          if (info.clientPhone) setClientPhone(info.clientPhone)
-          if (info.preferredTime) setPreferredTime(info.preferredTime)
-          if (info.device) setDeviceInfo(info.device)
+          if (info.clientName) {
+            setClientName(info.clientName)
+            restoredName = info.clientName
+          }
+          if (info.clientEmail) {
+            setClientEmail(info.clientEmail)
+            restoredEmail = info.clientEmail
+          }
+          if (info.clientPhone) {
+            setClientPhone(info.clientPhone)
+            restoredPhone = info.clientPhone
+          }
+          if (info.preferredTime) {
+            setPreferredTime(info.preferredTime)
+            restoredPreferredTime = info.preferredTime
+          }
+          if (info.device) {
+            setDeviceInfo(info.device)
+            restoredDevice = info.device
+          }
         }
       }
+      setConversationStep(
+        deriveConversationStep({
+          deviceInfo: restoredDevice,
+          clientName: restoredName,
+          clientPhone: restoredPhone,
+          clientEmail: restoredEmail,
+          preferredTime: restoredPreferredTime,
+        })
+      )
     } catch (error) {
       console.error('Failed to parse stored chat state', error)
     }
@@ -212,26 +309,53 @@ Once every field is collected, confirm the summary and tell the client you will 
     let updatedClientPhone = clientPhone
     let updatedClientEmail = clientEmail
     let updatedPreferredTime = preferredTime
-    let nextStep = conversationStep
 
-    if (conversationStep === 'device' && !deviceInfo) {
+    const emailCandidate = extractEmail(userText)
+    const phoneCandidate = extractPhone(userText)
+    const timeCandidate = extractPreferredTime(userText)
+    const nameCandidate = looksLikeName(userText) ? userText : null
+
+    if (!updatedDeviceInfo && conversationStep === 'device') {
       updatedDeviceInfo = userText
-      nextStep = 'name'
-    } else if (conversationStep === 'name' && !clientName) {
-      updatedClientName = userText
-      nextStep = 'phone'
-    } else if (conversationStep === 'phone' && !clientPhone) {
-      const digits = userText.match(/[+\d][\d\s().-]{6,}/)
-      updatedClientPhone = digits ? digits[0].trim() : userText
-      nextStep = 'email'
-    } else if (conversationStep === 'email' && !clientEmail) {
-      const emailMatch = userText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)
-      updatedClientEmail = emailMatch ? emailMatch[0] : userText
-      nextStep = 'time'
-    } else if (conversationStep === 'time' && !preferredTime) {
-      updatedPreferredTime = userText
-      nextStep = 'complete'
+    } else if (
+      !updatedDeviceInfo &&
+      !emailCandidate &&
+      !phoneCandidate &&
+      !timeCandidate &&
+      !nameCandidate
+    ) {
+      updatedDeviceInfo = userText
+    } else if (
+      updatedDeviceInfo &&
+      !nameCandidate &&
+      !emailCandidate &&
+      !phoneCandidate &&
+      !timeCandidate &&
+      conversationStep !== 'device'
+    ) {
+      updatedDeviceInfo = appendDeviceDetail(updatedDeviceInfo, userText)
     }
+
+    if (!updatedClientEmail && emailCandidate) {
+      updatedClientEmail = emailCandidate
+    }
+    if (!updatedClientPhone && phoneCandidate) {
+      updatedClientPhone = phoneCandidate
+    }
+    if (!updatedClientName && nameCandidate) {
+      updatedClientName = nameCandidate
+    }
+    if (!updatedPreferredTime && timeCandidate) {
+      updatedPreferredTime = timeCandidate
+    }
+
+    const nextStep = deriveConversationStep({
+      deviceInfo: updatedDeviceInfo,
+      clientName: updatedClientName,
+      clientPhone: updatedClientPhone,
+      clientEmail: updatedClientEmail,
+      preferredTime: updatedPreferredTime,
+    })
 
     setDeviceInfo(updatedDeviceInfo)
     setClientName(updatedClientName)
