@@ -64,6 +64,7 @@ const Landing = () => {
     ''
   const storageKey = 'macworld_rob_chat_state'
   const cookieKey = 'macworld_rob_client'
+  const sessionTtlMs = 24 * 60 * 60 * 1000 // 24 hours
   // System instruction keeps Rob on-brand for every request (updated with explicit MacWORLD context)
   const systemPrompt = `
 You are Rob, a MacWORLD Gallery Ltd. assistant based at Shop B18-a, Emab Plaza, Wuse II, Abuja (open Mon-Sat, 9am-7pm).
@@ -130,52 +131,64 @@ Stay friendly, human, and knowledgeable. Never say you are a bot.`
 
       if (savedState) {
         const parsed = JSON.parse(savedState)
-        if (parsed.messages) setChatMessages(parsed.messages)
-        if (parsed.deviceInfo) {
-          setDeviceInfo(parsed.deviceInfo)
-          restoredDevice = parsed.deviceInfo
+        const savedAt = parsed.savedAt || 0
+        const isFresh = Date.now() - savedAt < sessionTtlMs
+        if (isFresh) {
+          if (parsed.messages) setChatMessages(parsed.messages)
+          if (parsed.deviceInfo) {
+            setDeviceInfo(parsed.deviceInfo)
+            restoredDevice = parsed.deviceInfo
+          }
+          if (parsed.clientName) {
+            setClientName(parsed.clientName)
+            restoredName = parsed.clientName
+          }
+          if (parsed.clientPhone) {
+            setClientPhone(parsed.clientPhone)
+            restoredPhone = parsed.clientPhone
+          }
+          if (parsed.clientEmail) {
+            setClientEmail(parsed.clientEmail)
+            restoredEmail = parsed.clientEmail
+          }
+          if (parsed.preferredTime) {
+            setPreferredTime(parsed.preferredTime)
+            restoredPreferredTime = parsed.preferredTime
+          }
+          if (parsed.appointmentLog) setAppointmentLog(parsed.appointmentLog)
+          if (parsed.emailStatus) setEmailStatus(parsed.emailStatus)
+        } else {
+          localStorage.removeItem(storageKey)
         }
-        if (parsed.clientName) {
-          setClientName(parsed.clientName)
-          restoredName = parsed.clientName
-        }
-        if (parsed.clientPhone) {
-          setClientPhone(parsed.clientPhone)
-          restoredPhone = parsed.clientPhone
-        }
-        if (parsed.clientEmail) {
-          setClientEmail(parsed.clientEmail)
-          restoredEmail = parsed.clientEmail
-        }
-        if (parsed.preferredTime) {
-          setPreferredTime(parsed.preferredTime)
-          restoredPreferredTime = parsed.preferredTime
-        }
-        if (parsed.appointmentLog) setAppointmentLog(parsed.appointmentLog)
-        if (parsed.emailStatus) setEmailStatus(parsed.emailStatus)
       } else {
         const cookieData = getCookie(cookieKey)
         if (cookieData) {
           const info = JSON.parse(decodeURIComponent(cookieData))
-          if (info.clientName) {
-            setClientName(info.clientName)
-            restoredName = info.clientName
-          }
-          if (info.clientEmail) {
-            setClientEmail(info.clientEmail)
-            restoredEmail = info.clientEmail
-          }
-          if (info.clientPhone) {
-            setClientPhone(info.clientPhone)
-            restoredPhone = info.clientPhone
-          }
-          if (info.preferredTime) {
-            setPreferredTime(info.preferredTime)
-            restoredPreferredTime = info.preferredTime
-          }
-          if (info.device) {
-            setDeviceInfo(info.device)
-            restoredDevice = info.device
+          const savedAt = info.savedAt || 0
+          const isFresh = Date.now() - savedAt < sessionTtlMs
+          if (isFresh) {
+            if (info.clientName) {
+              setClientName(info.clientName)
+              restoredName = info.clientName
+            }
+            if (info.clientEmail) {
+              setClientEmail(info.clientEmail)
+              restoredEmail = info.clientEmail
+            }
+            if (info.clientPhone) {
+              setClientPhone(info.clientPhone)
+              restoredPhone = info.clientPhone
+            }
+            if (info.preferredTime) {
+              setPreferredTime(info.preferredTime)
+              restoredPreferredTime = info.preferredTime
+            }
+            if (info.device) {
+              setDeviceInfo(info.device)
+              restoredDevice = info.device
+            }
+          } else {
+            setCookie(cookieKey, '', -1)
           }
         }
       }
@@ -205,6 +218,7 @@ Stay friendly, human, and knowledgeable. Never say you are a bot.`
       preferredTime,
       appointmentLog,
       emailStatus,
+      savedAt: Date.now(),
     }
     try {
       localStorage.setItem(storageKey, JSON.stringify(stateToStore))
@@ -407,7 +421,11 @@ Once every field is collected, confirm the summary and tell the client you will 
         console.log('Rob appointment request:', appointmentDetails)
         setAppointmentLog(appointmentDetails)
         try {
-          setCookie(cookieKey, encodeURIComponent(JSON.stringify(appointmentDetails)))
+          setCookie(
+            cookieKey,
+            encodeURIComponent(JSON.stringify({ ...appointmentDetails, savedAt: Date.now() })),
+            1
+          )
         } catch (error) {
           console.warn('Unable to store appointment cookie', error)
         }
