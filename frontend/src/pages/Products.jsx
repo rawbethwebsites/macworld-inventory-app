@@ -14,6 +14,8 @@ const Products = () => {
   const [viewMode, setViewMode] = useState('grid')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [restockAmount, setRestockAmount] = useState('')
+  const [restocking, setRestocking] = useState(false)
   
   // Form state
   const [formData, setFormData] = useState({
@@ -334,6 +336,7 @@ const Products = () => {
   const openProductDetail = (product) => {
     setSelectedProduct(product)
     setShowDetailModal(true)
+    setRestockAmount('')
   }
 
   // Get category display text
@@ -342,6 +345,39 @@ const Products = () => {
     const subcategory = product.category.name
     const parent = product.category.parent?.name
     return parent ? `${parent} → ${subcategory}` : subcategory
+  }
+
+  const handleRestockSubmit = async (e) => {
+    e.preventDefault()
+    if (!selectedProduct) return
+
+    const amount = parseInt(restockAmount, 10)
+    if (Number.isNaN(amount) || amount <= 0) {
+      showNotification('Enter a quantity greater than 0', 'error')
+      return
+    }
+
+    try {
+      setRestocking(true)
+      const { data, error } = await supabase
+        .from('products')
+        .update({ quantity: (selectedProduct.quantity || 0) + amount })
+        .eq('id', selectedProduct.id)
+        .select('id, quantity')
+        .single()
+
+      if (error) throw error
+
+      setSelectedProduct(prev => prev ? { ...prev, quantity: data.quantity } : prev)
+      setProducts(prev => prev.map(p => p.id === selectedProduct.id ? { ...p, quantity: data.quantity } : p))
+      setRestockAmount('')
+      showNotification(`Added ${amount} unit${amount === 1 ? '' : 's'} to stock. New quantity: ${data.quantity}`, 'success')
+    } catch (error) {
+      console.error('Error restocking product:', error)
+      showNotification('Failed to update stock: ' + error.message, 'error')
+    } finally {
+      setRestocking(false)
+    }
   }
 
   // Loading skeleton
@@ -801,6 +837,33 @@ const Products = () => {
                       })}
                     </p>
                   </div>
+                </div>
+
+                {/* Restock */}
+                <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900">Add Stock</h4>
+                      <p className="text-sm text-gray-600">Increase available units without recreating the product.</p>
+                    </div>
+                  </div>
+                  <form onSubmit={handleRestockSubmit} className="mt-4 flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="number"
+                      min="1"
+                      value={restockAmount}
+                      onChange={(e) => setRestockAmount(e.target.value)}
+                      className="input-base sm:max-w-[160px]"
+                      placeholder="e.g., 10"
+                    />
+                    <button
+                      type="submit"
+                      disabled={restocking}
+                      className="btn-primary sm:w-auto"
+                    >
+                      {restocking ? 'Updating...' : 'Add to Stock'}
+                    </button>
+                  </form>
                 </div>
 
                 {/* Actions */}
